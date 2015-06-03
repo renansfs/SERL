@@ -75,15 +75,28 @@ void printdev(libusb_device *dev) {
 int read() {
 	libusb_device **devs; //pointer to pointer of device, used to retrieve a list of devices
 	libusb_device_handle *dev_handle; //a device handle
+        libusb_transfer *dev_transfer = NULL; //device that data should be transfered 
 	libusb_context *ctx = NULL; //a libusb session
 	int r; //for return values
 	ssize_t cnt; //holding number of devices in list
 	r = libusb_init(&ctx); //initialize the library for the session we just declared
+        unsigned char* buffer;
+        unsigned char data[283]; //data to write
+        
+       // dev_transfer->dev_handle = dev_handle;
+       // dev_transfer->flags = LIBUSB_TRANSFER_FREE_TRANSFER;
+       // dev_transfer->endpoint = LIBUSB_ENDPOINT_IN;
+       // dev_transfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
+      //  dev_transfer->timeout = 0;
+       // dev_transfer->length = 283;
+    //    dev_transfer->user_data = data;
+     //   dev_transfer->buffer = buffer;
+        
 	if(r < 0) {
 		cout<<"Init Error "<<r<<endl; //there was an error
 		return 1;
 	}
-	libusb_set_debug(ctx, 1); //set verbosity level to 3, as suggested in the documentation
+	libusb_set_debug(ctx, 3); //set verbosity level to 3, as suggested in the documentation
 
 	cnt = libusb_get_device_list(ctx, &devs); //get the list of devices
 	if(cnt < 0) {
@@ -92,15 +105,13 @@ int read() {
 	}
 	cout<<cnt<<" Devices in list."<<endl;
 
-	dev_handle = libusb_open_device_with_vid_pid(ctx, 1921, 21808); //these are vendorID and productID I found for my usb device
+	dev_handle = libusb_open_device_with_vid_pid(ctx, 1027, 24577); //these are vendorID and productID I found for my usb device
 	if(dev_handle == NULL)
 		cout<<"Cannot open device"<<endl;
 	else
 		cout<<"Device Opened"<<endl;
-	libusb_free_device_list(devs, 1); //free the list, unref the devices in it
-        
-	unsigned char *data = new unsigned char[4]; //data to write
-	data[0]='a';data[1]='b';data[2]='c';data[3]='d'; //some dummy values
+	
+        libusb_free_device_list(devs, 1); //free the list, unref the devices in it
 
 	int actual; //used to find out how many bytes were written
 	if(libusb_kernel_driver_active(dev_handle, 0) == 1) { //find out if kernel driver is attached
@@ -115,15 +126,22 @@ int read() {
 	}
 	cout<<"Claimed Interface"<<endl;
 	
-	cout<<"Data->"<<data<<"<-"<<endl; //just to see the data we want to write : abcd
-	cout<<"Writing Data..."<<endl;
-	r = libusb_bulk_transfer(dev_handle, (2 | LIBUSB_ENDPOINT_OUT), data, 4, &actual, 0); //my device's out endpoint was 2, found with trial- the device had 2 endpoints: 2 and 129
-	if(r == 0 && actual == 4) //we wrote the 4 bytes successfully
-		cout<<"Writing Successful!"<<endl;
-	else
-		cout<<"Write Error"<<endl;
 	
-         
+	cout<<"Reading Data..."<<endl;
+	//allocate data
+        int *mem; //pointer to a newly allocated transfer, or Null on error.
+        
+       // mem = libusb_alloc_transfer();
+    //   r = libusb_bulk_transfer(dev_handle, (2 | LIBUSB_ENDPOINT_OUT), data, 283, &actual, 5); //my device's out endpoint was 2, found with trial- the device had 2 endpoints: 2 and 129
+     //   mem = libusb_submit_transfer(dev_transfer);
+      //  libusb_free_transfer(dev_transfer);		
+        cout << "It is working.";
+        if(r == 0 && mem == 0) //we wrote the 4 bytes successfully
+		cout<<"Reading Successful!"<<endl;
+	else
+		cout<<"Reading Error"<<endl;
+	
+        
 	r = libusb_release_interface(dev_handle, 0); //release the claimed interface
 	if(r!=0) {
 		cout<<"Cannot Release Interface"<<endl;
@@ -134,7 +152,9 @@ int read() {
 	libusb_close(dev_handle); //close the device we opened
 	libusb_exit(ctx); //needs to be called to end the
 
-	delete[] data; //delete the allocated memory for data */
+	
 	return 0;
 }
+
+
 
