@@ -41,7 +41,7 @@ int open_port(void)
 {
 	int fd; // file description for the serial port
                                                               
-	fd = open("../dev/ttyUSB0", O_RDONLY | O_NONBLOCK);
+	fd = open("/dev/ttyUSB0", O_RDONLY);
         
 	if(fd == -1) // if open is unsucessful
             
@@ -100,15 +100,15 @@ int query_modem(int fd)   // query modem with an AT command
 	
         
         while(true){
-            result = read(fd, send_bytes, 13);  //Send data
+            result = read(fd, &send_bytes, 283);  //read data
             if(result < 0) printf("Failed reading \n");
-            else printf("Sucessful reading %d \n", result);
+            else printf("Sucessful reading %d \n", send_bytes);
             sleep(1);
         
 
 	n = 0;
 	// do the select
-	n = select(fd + 1, &rdfs, NULL, NULL, &timeout);
+	//n = select(fd + 1, &rdfs, NULL, NULL, &timeout);
 	
 	// check if an error has occured
 	if(n < 0)
